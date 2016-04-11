@@ -47,17 +47,9 @@ func createConnection() {
 	fmt.Fprintf(conn, "USER %s\r\n", twitchUsername)
 	fmt.Fprintf(conn, "NICK %s\r\n", twitchUsername)
 	 // enable roomstate and such
-
-	go func() {
-		for !connactive {
-			if connactive {
-				log.Info("JOIN #gempbot")
-				fmt.Fprintf(mainconn, "JOIN %s\r\n", "#gempbot")
-				startDefaultJoin()
-				break
-			}
-		}
-	}()
+	log.Info("JOIN #gempbot")
+	fmt.Fprintf(mainconn, "JOIN %s\r\n", "#gempbot")
+	go startDefaultJoin()
 
 	reader := bufio.NewReader(conn)
 	tp := textproto.NewReader(reader)
@@ -74,7 +66,6 @@ func createConnection() {
 		for _, msg := range messages {
 			parseMessage(msg)
 		}
-
 	}
 	defer conn.Close()
 }
@@ -116,6 +107,7 @@ func saveMessage(channel, username, message, timestamp string) {
 func join(channel string) {
 	log.Info("JOIN " + channel)
     fmt.Fprintf(mainconn, "JOIN %s\r\n", channel)
+	time.Sleep(time.Second)
 }
 
 func startDefaultJoin() {
@@ -126,7 +118,7 @@ func startDefaultJoin() {
 		var channel string
 		err = rows.Scan(&channel)
 		checkErr(err)
-		go join(channel)
+		join(channel)
 	}
 
 	defer rows.Close()
