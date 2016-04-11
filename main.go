@@ -46,6 +46,7 @@ func createConnection() {
 	fmt.Fprintf(conn, "USER %s\r\n", twitchUsername)
 	fmt.Fprintf(conn, "NICK %s\r\n", twitchUsername)
 	 // enable roomstate and such
+	log.Info("JOIN #gempbot")
 	fmt.Fprintf(mainconn, "JOIN %s\r\n", "#gempbot")
 	log.Debugf("new connection %s", conn.RemoteAddr())
 	startDefaultJoin()
@@ -95,6 +96,7 @@ func saveMessage(channel, username, message, timestamp string) {
 }
 
 func join(channel string) {
+	log.Info("JOIN " + channel)
     fmt.Fprintf(mainconn, "JOIN %s\r\n", channel)
 }
 
