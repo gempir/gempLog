@@ -1,0 +1,8 @@
+package main
+
+const (
+	mysql         = "username:password@tcp(127.0.0.1:3306)/database"
+	twitchOauth = "test;oauth:123"
+	twitchUsername = "gempir"
+	twitchAddress = "irc.chat.twitch.tv"
+)
