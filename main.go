@@ -59,14 +59,7 @@ func createConnection() {
 			reconnect(conn)
 			break // break loop on errors
 		}
-		messages := strings.Split(line,"\r\n")
-		if len(messages) == 0 {
-			continue
-		}
-		for _, msg := range messages {
-			parseMessage(msg)
-		}
-
+		go parseMessage(line)
 	}
 }
 
