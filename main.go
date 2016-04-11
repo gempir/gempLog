@@ -39,7 +39,6 @@ func createConnection() {
     mainconn = conn
 	if err != nil {
 		log.Error(err)
-		reconnect(conn)
 		return
 	}
 	log.Debugf("new connection %s", conn.RemoteAddr())
@@ -56,7 +55,6 @@ func createConnection() {
 		line, err := tp.ReadLine()
 		if err != nil {
 			log.Error(err)
-			reconnect(conn)
 			break // break loop on errors
 		}
 		messages := strings.Split(line,"\r\n")
@@ -68,6 +66,7 @@ func createConnection() {
 		}
 
 	}
+	defer conn.Close()
 }
 
 func parseMessage(msg string) {
@@ -121,9 +120,4 @@ func checkErr(err error) {
 	if err != nil {
 		log.Error(err)
 	}
-}
-
-func reconnect(conn net.Conn) {
-	conn.Close()
-	createConnection()
 }
