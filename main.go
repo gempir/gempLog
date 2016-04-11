@@ -64,7 +64,7 @@ func createConnection() {
 			continue
 		}
 		for _, msg := range messages {
-			go parseMessage(msg)
+			parseMessage(msg)
 		}
 
 	}
