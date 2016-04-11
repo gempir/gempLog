@@ -42,13 +42,13 @@ func createConnection() {
 		reconnect(conn)
 		return
 	}
+	log.Debugf("new connection %s", conn.RemoteAddr())
 	fmt.Fprintf(conn, "PASS %s\r\n", twitchOauth)
 	fmt.Fprintf(conn, "USER %s\r\n", twitchUsername)
 	fmt.Fprintf(conn, "NICK %s\r\n", twitchUsername)
 	 // enable roomstate and such
 	log.Info("JOIN #gempbot")
 	fmt.Fprintf(mainconn, "JOIN %s\r\n", "#gempbot")
-	log.Debugf("new connection %s", conn.RemoteAddr())
 	startDefaultJoin()
 	reader := bufio.NewReader(conn)
 	tp := textproto.NewReader(reader)
@@ -60,6 +60,9 @@ func createConnection() {
 			break // break loop on errors
 		}
 		messages := strings.Split(line,"\r\n")
+		if len(messages) == 0 {
+			continue
+		}
 		for _, msg := range messages {
 			go parseMessage(msg)
 		}
