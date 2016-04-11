@@ -73,6 +73,7 @@ func parseMessage(msg string) {
 	if !strings.Contains(msg, ".tmi.twitch.tv PRIVMSG ") {
 		return
 	}
+	log.Debug(msg)
 	split1 := strings.Split(msg, ":gempir!gempir@")
 	split2 := strings.Split(split1[1], ".tmi.twitch.tv PRIVMSG ")
 	username := split2[0]
