@@ -53,13 +53,22 @@ func createConnection() {
 	reader := bufio.NewReader(conn)
 	tp := textproto.NewReader(reader)
 	for {
+		log.Notice("starting to readLine")
 		line, err := tp.ReadLine()
+		log.Notice(line, err)
 		if err != nil {
 			log.Error(err)
 			reconnect(conn)
 			break // break loop on errors
 		}
-		go parseMessage(line)
+		messages := strings.Split(line,"\r\n")
+		if len(messages) == 0 {
+			continue
+		}
+		for _, msg := range messages {
+			go parseMessage(msg)
+		}
+
 	}
 }
 
