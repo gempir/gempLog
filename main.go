@@ -37,7 +37,6 @@ func main() {
 
 func createConnection() {
     conn, err := net.Dial("tcp", twitchAddress)
-    mainconn = conn
 	if err != nil {
 		log.Error(err)
 		return
@@ -48,8 +47,8 @@ func createConnection() {
 	fmt.Fprintf(conn, "NICK %s\r\n", twitchUsername)
 	 // enable roomstate and such
 	log.Info("JOIN #gempbot")
-	fmt.Fprintf(mainconn, "JOIN %s\r\n", "#gempbot")
-	go startDefaultJoin()
+	fmt.Fprintf(conn, "JOIN %s\r\n", "#gempbot")
+	go startDefaultJoin(conn)
 
 	reader := bufio.NewReader(conn)
 	tp := textproto.NewReader(reader)
@@ -71,13 +70,7 @@ func createConnection() {
 }
 
 func parseMessage(msg string) {
-	if strings.Contains(msg, "tmi.twitch.tv 001") {
-		connactive = true
-	}
-	if strings.Contains(msg, "PING ") {
-		fmt.Fprintf(mainconn, "PONG tmi.twitch.tv\r\n")
-	}
-	if !strings.Contains(msg, ".tmi.twitch.tv PRIVMSG #") {
+	if !strings.Contains(msg, ".tmi.twitch.tv PRIVMSG ") {
 		return
 	}
 	split1 := strings.Split(msg, ":gempir!gempir@")
@@ -104,13 +97,13 @@ func saveMessage(channel, username, message, timestamp string) {
     checkErr(err)
 }
 
-func join(channel string) {
+func join(channel string, conn net.Conn) {
 	log.Info("JOIN " + channel)
-    fmt.Fprintf(mainconn, "JOIN %s\r\n", channel)
+    fmt.Fprintf(conn, "JOIN %s\r\n", channel)
 	time.Sleep(time.Second)
 }
 
-func startDefaultJoin() {
+func startDefaultJoin(conn net.Conn) {
 	rows, err := db.Query("SELECT channel FROM channels")
 	checkErr(err)
 
@@ -118,7 +111,7 @@ func startDefaultJoin() {
 		var channel string
 		err = rows.Scan(&channel)
 		checkErr(err)
-		join(channel)
+		join(channel, conn)
 	}
 
 	defer rows.Close()
