@@ -17,6 +17,7 @@ import (
 var (
 	db, err = sql.Open("mysql", mysql)
     mainconn net.Conn
+	connactive = false
 	log    = logging.MustGetLogger("example")
 	format = logging.MustStringFormatter(
 		`%{color}[%{time:2006-01-02 15:04:05}] [%{level:.4s}] %{color:reset}%{message}`,
@@ -46,9 +47,18 @@ func createConnection() {
 	fmt.Fprintf(conn, "USER %s\r\n", twitchUsername)
 	fmt.Fprintf(conn, "NICK %s\r\n", twitchUsername)
 	 // enable roomstate and such
-	log.Info("JOIN #gempbot")
-	fmt.Fprintf(mainconn, "JOIN %s\r\n", "#gempbot")
-	startDefaultJoin()
+
+	go func() {
+		for !connactive {
+			if connactive {
+				log.Info("JOIN #gempbot")
+				fmt.Fprintf(mainconn, "JOIN %s\r\n", "#gempbot")
+				startDefaultJoin()
+				break
+			}
+		}
+	}()
+
 	reader := bufio.NewReader(conn)
 	tp := textproto.NewReader(reader)
 	for {
@@ -62,7 +72,7 @@ func createConnection() {
 			continue
 		}
 		for _, msg := range messages {
-			go parseMessage(msg)
+			parseMessage(msg)
 		}
 
 	}
@@ -70,6 +80,12 @@ func createConnection() {
 }
 
 func parseMessage(msg string) {
+	if strings.Contains(msg, "tmi.twitch.tv 001") {
+		connactive = true
+	}
+	if strings.Contains(msg, "PING ") {
+		fmt.Fprintf(mainconn, "PONG tmi.twitch.tv\r\n")
+	}
 	if !strings.Contains(msg, ".tmi.twitch.tv PRIVMSG #") {
 		return
 	}
