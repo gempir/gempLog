@@ -73,12 +73,10 @@ func parseMessage(msg string) {
 	if !strings.Contains(msg, ".tmi.twitch.tv PRIVMSG ") {
 		return
 	}
-
 	userrp := regexp.MustCompile(`:\w+!\w+@\w+\.tmi\.twitch\.tv`)
 	fulluser := userrp.FindString(msg)
 	userirc := strings.Split(fulluser, "!")
 	username := userirc[0][1:len(userirc[0])]
-
 	split2 := strings.Split(msg, ".tmi.twitch.tv PRIVMSG ")
 	rp := regexp.MustCompile(`#\w+\s:`)
 	split3 := rp.FindString(split2[1])
@@ -91,7 +89,6 @@ func parseMessage(msg string) {
 	message = rp3.ReplaceAllLiteralString(message, "")
 	timestamp := time.Now().Format("2006-01-2 15:04:05")
 
-
 	saveMessage(channel, username, message, timestamp)
 }
 
@@ -99,19 +96,13 @@ func saveMessage(channel, username, message, timestamp string) {
 	stmt, err := db.Prepare("INSERT INTO gempLog (channel, username, message, timestamp) VALUES (?, ?, ?, ?)")
     checkErr(err)
 
-    res, err := stmt.Exec(channel, username, message, timestamp)
+    _, err = stmt.Exec(channel, username, message, timestamp)
     checkErr(err)
-
-	id, err := res.LastInsertId()
-    checkErr(err)
-
-	log.Debug(id, channel, username, message, timestamp)
 }
 
 func join(channel string, conn net.Conn) {
 	log.Info("JOIN " + channel)
     fmt.Fprintf(conn, "JOIN %s\r\n", channel)
-	time.Sleep(time.Second)
 }
 
 func startDefaultJoin(conn net.Conn) {
