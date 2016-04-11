@@ -93,10 +93,7 @@ func parseMessage(msg string) {
 }
 
 func saveMessage(channel, username, message, timestamp string) {
-	stmt, err := db.Prepare("INSERT INTO gempLog (channel, username, message, timestamp) VALUES (?, ?, ?, ?)")
-    checkErr(err)
-
-    _, err = stmt.Exec(channel, username, message, timestamp)
+	_, err := db.Exec("INSERT INTO gempLog (channel, username, message, timestamp) VALUES (?, ?, ?, ?)", channel, username, message, timestamp)
     checkErr(err)
 }
 
