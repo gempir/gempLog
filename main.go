@@ -88,15 +88,38 @@ func parseMessage(msg string) {
 	message := split4[1]
 	message = actionrp1.ReplaceAllLiteralString(message, "")
 	message = actionrp2.ReplaceAllLiteralString(message, "")
-	timestamp := time.Now().Format("2006-01-2 15:04:05")
+	//timestamp := time.Now().Format("2006-01-2 15:04:05")
 
-	saveMessage(channel, username, message, timestamp)
+	//saveMessageToDB(channel, username, message, timestamp)
+	saveMessageToTxt(channel, username, message, time.Now())
 }
 
-func saveMessage(channel, username, message, timestamp string) {
+func saveMessageToDB(channel, username, message, timestamp string) {
 	_, err := db.Exec("INSERT INTO gempLog (channel, username, message, timestamp) VALUES (?, ?, ?, ?)", channel, username, message, timestamp)
 	checkErr(err)
 }
+
+func saveMessageToTxt(channel, username, message string, timestamp time.Time) {
+	year := timestamp.Year()
+	month := timestamp.Month()
+
+	filename := fmt.Sprintf("/var/gemplog/%d/%s/%s.txt", year, month, username)
+
+	log.Debug(filename)
+
+	file, err := os.OpenFile(filename, os.O_APPEND|os.O_WRONLY|os.O_CREATE,0600)
+	if err != nil {
+		panic(err)
+	}
+	defer file.Close()
+
+	contents := fmt.Sprintf("%s[|]%s[|]%s[|]%s", timestamp.Format("2006-01-2 15:04:05"), channel, username, message)
+	log.Debug(contents)
+	if _, err = file.WriteString(contents); err != nil {
+		log.Error(err)
+	}
+}
+
 
 func join(channel string, conn net.Conn) {
 	log.Info("JOIN " + channel)
