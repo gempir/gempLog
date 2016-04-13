@@ -46,10 +46,9 @@ func createConnection() {
 		return
 	}
 	log.Debugf("new connection %s", conn.RemoteAddr())
-	fmt.Fprintf(conn, "PASS %s\r\n", twitchOauth)
-	fmt.Fprintf(conn, "USER %s\r\n", twitchUsername)
-	fmt.Fprintf(conn, "NICK %s\r\n", twitchUsername)
-	// enable roomstate and such
+	fmt.Fprintf(conn, "USER %s\r\n", "justinfan123321")
+	fmt.Fprintf(conn, "NICK %s\r\n", "justinfan123321")
+	// default room
 	log.Info("JOIN #gempbot")
 	fmt.Fprintf(conn, "JOIN %s\r\n", "#gempbot")
 	go startDefaultJoin(conn)
@@ -88,9 +87,9 @@ func parseMessage(msg string) {
 	message := split4[1]
 	message = actionrp1.ReplaceAllLiteralString(message, "")
 	message = actionrp2.ReplaceAllLiteralString(message, "")
-	//timestamp := time.Now().Format("2006-01-2 15:04:05")
+	timestamp := time.Now().Format("2006-01-2 15:04:05")
 
-	//saveMessageToDB(channel, username, message, timestamp)
+	saveMessageToDB(channel, username, message, timestamp)
 	saveMessageToTxt(channel, username, message, time.Now())
 }
 
@@ -113,7 +112,7 @@ func saveMessageToTxt(channel, username, message string, timestamp time.Time) {
 	}
 	defer file.Close()
 
-	contents := fmt.Sprintf("%s[|]%s[|]%s[|]%s", timestamp.Format("2006-01-2 15:04:05"), channel, username, message)
+	contents := fmt.Sprintf("%s[|]%s[|]%s[|]%s\r\n", timestamp.Format("2006-01-2 15:04:05"), channel, username, message)
 	log.Debug(contents)
 	if _, err = file.WriteString(contents); err != nil {
 		log.Error(err)
