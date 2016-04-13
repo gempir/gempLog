@@ -46,10 +46,9 @@ func createConnection() {
 		return
 	}
 	log.Debugf("new connection %s", conn.RemoteAddr())
-	fmt.Fprintf(conn, "PASS %s\r\n", twitchOauth)
-	fmt.Fprintf(conn, "USER %s\r\n", twitchUsername)
-	fmt.Fprintf(conn, "NICK %s\r\n", twitchUsername)
-	// enable roomstate and such
+	fmt.Fprintf(conn, "USER %s\r\n", "justinfan123321")
+	fmt.Fprintf(conn, "NICK %s\r\n", "justinfan123321")
+	// default room
 	log.Info("JOIN #gempbot")
 	fmt.Fprintf(conn, "JOIN %s\r\n", "#gempbot")
 	go startDefaultJoin(conn)
@@ -90,13 +89,36 @@ func parseMessage(msg string) {
 	message = actionrp2.ReplaceAllLiteralString(message, "")
 	timestamp := time.Now().Format("2006-01-2 15:04:05")
 
-	saveMessage(channel, username, message, timestamp)
+	saveMessageToDB(channel, username, message, timestamp)
+	saveMessageToTxt(channel, username, message, time.Now())
 }
 
-func saveMessage(channel, username, message, timestamp string) {
+func saveMessageToDB(channel, username, message, timestamp string) {
 	_, err := db.Exec("INSERT INTO gempLog (channel, username, message, timestamp) VALUES (?, ?, ?, ?)", channel, username, message, timestamp)
 	checkErr(err)
 }
+
+func saveMessageToTxt(channel, username, message string, timestamp time.Time) {
+	year := timestamp.Year()
+	month := timestamp.Month()
+
+	filename := fmt.Sprintf("/var/gemplog/%d/%s/%s.txt", year, month, username)
+
+	log.Debug(filename)
+
+	file, err := os.OpenFile(filename, os.O_APPEND|os.O_WRONLY|os.O_CREATE,0600)
+	if err != nil {
+		panic(err)
+	}
+	defer file.Close()
+
+	contents := fmt.Sprintf("%s[|]%s[|]%s[|]%s\r\n", timestamp.Format("2006-01-2 15:04:05"), channel, username, message)
+	log.Debug(contents)
+	if _, err = file.WriteString(contents); err != nil {
+		log.Error(err)
+	}
+}
+
 
 func join(channel string, conn net.Conn) {
 	log.Info("JOIN " + channel)
