@@ -2,9 +2,7 @@ package main
 
 import (
 	"bufio"
-	"database/sql"
 	"fmt"
-	_ "github.com/go-sql-driver/mysql"
 	"github.com/op/go-logging"
 	"net"
 	"net/textproto"
@@ -12,11 +10,12 @@ import (
 	"regexp"
 	"strings"
 	"time"
+	"gopkg.in/redis.v3"
 )
 
 var (
-	db, err    = sql.Open("mysql", mysql)
-	mainconn   net.Conn
+	mainconn   *net.Conn
+	client     *redis.Client
 	connactive = false
 	log        = logging.MustGetLogger("example")
 	format     = logging.MustStringFormatter(
@@ -36,11 +35,23 @@ func main() {
 	backend1Leveled.SetLevel(logging.ERROR, "")
 	logging.SetBackend(backend1Leveled, backend2Formatter)
 
+	connectRedis()
 	createConnection()
+}
+
+func connectRedis() {
+	client = redis.NewClient(&redis.Options{
+        Addr:     redisaddress,
+        Password: redispass, // no password set
+        DB:       0,  // use default DB
+    })
+	pong, err := client.Ping().Result()
+    log.Debug(pong, err)
 }
 
 func createConnection() {
 	conn, err := net.Dial("tcp", twitchAddress)
+	mainconn = &conn
 	if err != nil {
 		log.Error(err)
 		return
@@ -51,7 +62,8 @@ func createConnection() {
 	// default room
 	log.Info("JOIN #gempbot")
 	fmt.Fprintf(conn, "JOIN %s\r\n", "#gempbot")
-	go startDefaultJoin(conn)
+
+	go joinDefault()
 
 	reader := bufio.NewReader(conn)
 	tp := textproto.NewReader(reader)
@@ -72,6 +84,19 @@ func createConnection() {
 	defer conn.Close()
 }
 
+func joinDefault() {
+	val, err := client.HGetAll("logchannels").Result()
+    if err != nil {
+        log.Error(err)
+    }
+    for _, element := range val {
+		if element == "1" || element == "0" {
+			return
+		}
+		go join(element)
+	}
+}
+
 func parseMessage(msg string) {
 	if !strings.Contains(msg, ".tmi.twitch.tv PRIVMSG ") {
 		return
@@ -87,16 +112,10 @@ func parseMessage(msg string) {
 	message := split4[1]
 	message = actionrp1.ReplaceAllLiteralString(message, "")
 	message = actionrp2.ReplaceAllLiteralString(message, "")
-	timestamp := time.Now().Format("2006-01-2 15:04:05")
 
-	saveMessageToDB(channel, username, message, timestamp)
 	saveMessageToTxt(channel, username, message, time.Now())
 }
 
-func saveMessageToDB(channel, username, message, timestamp string) {
-	_, err := db.Exec("INSERT INTO gempLog (channel, username, message, timestamp) VALUES (?, ?, ?, ?)", channel, username, message, timestamp)
-	checkErr(err)
-}
 
 func saveMessageToTxt(channel, username, message string, timestamp time.Time) {
 	year := timestamp.Year()
@@ -117,23 +136,9 @@ func saveMessageToTxt(channel, username, message string, timestamp time.Time) {
 }
 
 
-func join(channel string, conn net.Conn) {
+func join(channel string) {
 	log.Info("JOIN " + channel)
-	fmt.Fprintf(conn, "JOIN %s\r\n", channel)
-}
-
-func startDefaultJoin(conn net.Conn) {
-	rows, err := db.Query("SELECT channel FROM channels")
-	checkErr(err)
-
-	for rows.Next() {
-		var channel string
-		err = rows.Scan(&channel)
-		checkErr(err)
-		join(channel, conn)
-	}
-
-	defer rows.Close()
+	fmt.Fprintf(*mainconn, "JOIN %s\r\n", channel)
 }
 
 func checkErr(err error) {
