@@ -91,7 +91,7 @@ func joinDefault() {
     }
     for _, element := range val {
 		if element == "1" || element == "0" {
-			return
+			continue
 		}
 		go join(element)
 	}
