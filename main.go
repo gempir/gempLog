@@ -104,16 +104,13 @@ func saveMessageToTxt(channel, username, message string, timestamp time.Time) {
 
 	filename := fmt.Sprintf("/var/gemplog/%d/%s/%s.txt", year, month, username)
 
-	log.Debug(filename)
-
 	file, err := os.OpenFile(filename, os.O_APPEND|os.O_WRONLY|os.O_CREATE,0600)
 	if err != nil {
-		panic(err)
+		log.Error(err)
 	}
 	defer file.Close()
 
 	contents := fmt.Sprintf("%s[|]%s[|]%s[|]%s\r\n", timestamp.Format("2006-01-2 15:04:05"), channel, username, message)
-	log.Debug(contents)
 	if _, err = file.WriteString(contents); err != nil {
 		log.Error(err)
 	}
