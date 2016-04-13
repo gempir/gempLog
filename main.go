@@ -120,8 +120,7 @@ func parseMessage(msg string) {
 func saveMessageToTxt(channel, username, message string, timestamp time.Time) {
 	year := timestamp.Year()
 	month := timestamp.Month()
-
-	filename := fmt.Sprintf("/var/gemplog/%d/%s/%s.txt", year, month, username)
+	filename := fmt.Sprintf(logfilepath + "%d/%s/%s.txt", year, month, username)
 
 	file, err := os.OpenFile(filename, os.O_APPEND|os.O_WRONLY|os.O_CREATE,0600)
 	if err != nil {

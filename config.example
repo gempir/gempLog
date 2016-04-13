@@ -5,4 +5,5 @@ const (
 	twitchAddress = "irc.chat.twitch.tv:80"
 	redisaddress  = ""
 	redispass     = ""
+	logfilepath    = "/var/log/" // don't forget to add a / at the end
 )
