@@ -16,7 +16,6 @@ import (
 var (
 	mainconn   *net.Conn
 	client     *redis.Client
-	connactive = false
 	log        = logging.MustGetLogger("example")
 	format     = logging.MustStringFormatter(
 		`%{color}[%{time:2006-01-02 15:04:05}] [%{level:.4s}] %{color:reset}%{message}`,
@@ -113,9 +112,13 @@ func parseMessage(msg string) {
 	message = actionrp1.ReplaceAllLiteralString(message, "")
 	message = actionrp2.ReplaceAllLiteralString(message, "")
 
+	incUser(username)
 	saveMessageToTxt(channel, username, message, time.Now())
 }
 
+func incUser(username string) {
+	client.ZIncrBy("user:lines", 1, username)
+}
 
 func saveMessageToTxt(channel, username, message string, timestamp time.Time) {
 	year := timestamp.Year()
