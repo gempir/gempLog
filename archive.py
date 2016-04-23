@@ -1,9 +1,9 @@
-!#/usr/bin/env python3
+#!/usr/bin/env python3
 
-import os
 import datetime
-import re
 import gzip
+import os
+import re
 import shutil
 
 mydate = datetime.datetime.now()
