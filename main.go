@@ -4,20 +4,20 @@ import (
 	"bufio"
 	"fmt"
 	"github.com/op/go-logging"
+	"gopkg.in/redis.v3"
 	"net"
 	"net/textproto"
 	"os"
 	"regexp"
 	"strings"
 	"time"
-	"gopkg.in/redis.v3"
 )
 
 var (
-	mainconn   *net.Conn
-	client     *redis.Client
-	log        = logging.MustGetLogger("example")
-	format     = logging.MustStringFormatter(
+	mainconn *net.Conn
+	client   *redis.Client
+	log      = logging.MustGetLogger("example")
+	format   = logging.MustStringFormatter(
 		`%{color}[%{time:2006-01-02 15:04:05}] [%{level:.4s}] %{color:reset}%{message}`,
 	)
 	userrp    = regexp.MustCompile(`:\w+!\w+@\w+\.tmi\.twitch\.tv`)
@@ -40,12 +40,12 @@ func main() {
 
 func connectRedis() {
 	client = redis.NewClient(&redis.Options{
-        Addr:     redisaddress,
-        Password: redispass, // no password set
-        DB:       0,  // use default DB
-    })
+		Addr:     redisaddress,
+		Password: redispass, // no password set
+		DB:       0,         // use default DB
+	})
 	pong, err := client.Ping().Result()
-    log.Debug(pong, err)
+	log.Debug(pong, err)
 }
 
 func createConnection() {
@@ -85,10 +85,10 @@ func createConnection() {
 
 func joinDefault() {
 	val, err := client.HGetAll("logchannels").Result()
-    if err != nil {
-        log.Error(err)
-    }
-    for _, element := range val {
+	if err != nil {
+		log.Error(err)
+	}
+	for _, element := range val {
 		if element == "1" || element == "0" {
 			continue
 		}
@@ -113,6 +113,7 @@ func parseMessage(msg string) {
 	message = actionrp2.ReplaceAllLiteralString(message, "")
 
 	incUser(username)
+	saveLastMessage(channel, username, message, time.Now())
 	saveMessageToTxt(channel, username, message, time.Now())
 }
 
@@ -120,16 +121,22 @@ func incUser(username string) {
 	client.ZIncrBy("user:lines", 1, username)
 }
 
+func saveLastMessage(channel, username, message string, timestamp time.Time) {
+	channel = strings.Replace(channel, "#", "", 1)
+	contents := fmt.Sprintf("%s[|]%s[|]%s[|]%s", timestamp.Format("2006-01-2 15:04:05"), channel, username, message)
+	client.HSet("lastmessage", username, contents)
+}
+
 func saveMessageToTxt(channel, username, message string, timestamp time.Time) {
 	year := timestamp.Year()
 	month := timestamp.Month()
 	channel = strings.Replace(channel, "#", "", 1)
-	err := os.MkdirAll(fmt.Sprintf(logfilepath + "%s/%d/%s/", channel, year, month), 0666)
+	err := os.MkdirAll(fmt.Sprintf(logfilepath+"%s/%d/%s/", channel, year, month), 0666)
 	if err != nil {
 		log.Error(err)
 		return
 	}
-	filename := fmt.Sprintf(logfilepath + "%s/%d/%s/%s.txt", channel, year, month, username)
+	filename := fmt.Sprintf(logfilepath+"%s/%d/%s/%s.txt", channel, year, month, username)
 
 	file, err := os.OpenFile(filename, os.O_APPEND|os.O_WRONLY|os.O_CREATE, 0666)
 	if err != nil {
@@ -142,7 +149,6 @@ func saveMessageToTxt(channel, username, message string, timestamp time.Time) {
 		log.Error(err)
 	}
 }
-
 
 func join(channel string) {
 	log.Info("JOIN " + channel)
