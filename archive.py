@@ -8,7 +8,7 @@ import shutil
 
 mydate = datetime.datetime.now()
 month = mydate.strftime('%B')
-rootdir = '/var/gemplog/'
+rootdir = '/home/gempir/channellogs'
 
 for subdir, dirs, files in os.walk(rootdir):
     for file in files:
