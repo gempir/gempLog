@@ -123,7 +123,13 @@ func incUser(username string) {
 func saveMessageToTxt(channel, username, message string, timestamp time.Time) {
 	year := timestamp.Year()
 	month := timestamp.Month()
-	filename := fmt.Sprintf(logfilepath + "%d/%s/%s.txt", year, month, username)
+	channel = strings.Replace(channel, "#", "", 1)
+	err := os.MkdirAll(fmt.Sprintf(logfilepath + "%s/%d/%s/", channel, year, month), 0600)
+	if err != nil {
+		log.Error(err)
+		return
+	}
+	filename := fmt.Sprintf(logfilepath + "%s/%d/%s/%s.txt", channel, year, month, username)
 
 	file, err := os.OpenFile(filename, os.O_APPEND|os.O_WRONLY|os.O_CREATE,0600)
 	if err != nil {
@@ -131,7 +137,7 @@ func saveMessageToTxt(channel, username, message string, timestamp time.Time) {
 	}
 	defer file.Close()
 
-	contents := fmt.Sprintf("%s[|]%s[|]%s[|]%s\r\n", timestamp.Format("2006-01-2 15:04:05"), channel, username, message)
+	contents := fmt.Sprintf("[%s] %s: %s\r\n", timestamp.Format("2006-01-2 15:04:05"), username, message)
 	if _, err = file.WriteString(contents); err != nil {
 		log.Error(err)
 	}
