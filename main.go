@@ -131,14 +131,14 @@ func saveMessageToTxt(channel, username, message string, timestamp time.Time) {
 	year := timestamp.Year()
 	month := timestamp.Month()
 	channel = strings.Replace(channel, "#", "", 1)
-	err := os.MkdirAll(fmt.Sprintf(logfilepath+"%s/%d/%s/", channel, year, month), 0666)
+	err := os.MkdirAll(fmt.Sprintf(logfilepath+"%s/%d/%s/", channel, year, month), 0755)
 	if err != nil {
 		log.Error(err)
 		return
 	}
 	filename := fmt.Sprintf(logfilepath+"%s/%d/%s/%s.txt", channel, year, month, username)
 
-	file, err := os.OpenFile(filename, os.O_APPEND|os.O_WRONLY|os.O_CREATE, 0666)
+	file, err := os.OpenFile(filename, os.O_APPEND|os.O_WRONLY|os.O_CREATE, 0755)
 	if err != nil {
 		log.Error(err)
 	}
