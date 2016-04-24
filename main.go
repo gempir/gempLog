@@ -124,7 +124,7 @@ func incUser(username string) {
 func saveLastMessage(channel, username, message string, timestamp time.Time) {
 	channel = strings.Replace(channel, "#", "", 1)
 	contents := fmt.Sprintf("%s[|]%s[|]%s[|]%s", timestamp.Format("2006-01-2 15:04:05"), channel, username, message)
-	client.HSet("lastmessage", username, contents)
+	client.HSet("user:lastmessage", username, contents)
 }
 
 func saveMessageToTxt(channel, username, message string, timestamp time.Time) {
