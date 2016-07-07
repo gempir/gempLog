@@ -80,7 +80,7 @@ func createConnection() {
 			parseMessage(msg)
 		}
 	}
-	defer conn.Close()
+	defer createConnection() // create new connection when end of conn
 }
 
 func joinDefault() {
