@@ -23,7 +23,7 @@ func parseMessage(msg string) {
 	message = actionrp1.ReplaceAllLiteralString(message, "")
 	message = actionrp2.ReplaceAllLiteralString(message, "")
 
-	log.Infof("[%s] %s @ %s - %s", channel, username, time.Now().Format("2006-01-2 15:04:05"), message)
+	log.Infof("[%s] %s - %s", channel, username, message)
 
 	incUser(username)
 	saveLastMessage(channel, username, message, time.Now())
