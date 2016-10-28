@@ -1,9 +1,0 @@
-package main
-
-const (
-	mysql         = "username:password@tcp(127.0.0.1:3306)/database"
-	twitchAddress = "irc.chat.twitch.tv:80"
-	redisaddress  = ""
-	redispass     = ""
-	logfilepath    = "/var/log/" // don't forget to add a / at the end
-)
