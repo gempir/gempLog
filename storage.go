@@ -8,8 +8,6 @@ import (
 )
 
 func parseMessage(msg string) {
-	log.Debug(msg)
-
 	if !strings.Contains(msg, ".tmi.twitch.tv PRIVMSG ") {
 		return
 	}
